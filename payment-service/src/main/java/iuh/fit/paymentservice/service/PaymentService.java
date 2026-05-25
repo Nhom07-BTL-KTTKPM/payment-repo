@@ -1,6 +1,5 @@
 package iuh.fit.paymentservice.service;
 
-import iuh.fit.paymentservice.client.CartServiceClient;
 import iuh.fit.paymentservice.client.OrderServiceClient;
 import iuh.fit.paymentservice.dto.OrderResponse;
 import iuh.fit.paymentservice.dto.PaymentRequest;
@@ -38,7 +37,6 @@ public class PaymentService {
 
     private final VnPayService vnPayService;
     private final OrderServiceClient orderServiceClient;
-    private final CartServiceClient cartServiceClient;
     private final PaymentRepository paymentRepository;
     private final String successRedirectUrl;
     private final String failRedirectUrl;
@@ -46,14 +44,12 @@ public class PaymentService {
     public PaymentService(
             VnPayService vnPayService,
             OrderServiceClient orderServiceClient,
-            CartServiceClient cartServiceClient,
             PaymentRepository paymentRepository,
             @Value("${payment.redirect.success-url}") String successRedirectUrl,
             @Value("${payment.redirect.fail-url}") String failRedirectUrl
     ) {
         this.vnPayService = vnPayService;
         this.orderServiceClient = orderServiceClient;
-        this.cartServiceClient = cartServiceClient;
         this.paymentRepository = paymentRepository;
         this.successRedirectUrl = successRedirectUrl;
         this.failRedirectUrl = failRedirectUrl;
@@ -130,14 +126,6 @@ public class PaymentService {
                         orderId.toString(),
                     new UpdateOrderStatusRequest("PROCESSING", null, "PAID")
                 );
-
-                if (order.customerId() != null) {
-                    try {
-                        cartServiceClient.clearCart(order.customerId().toString());
-                    } catch (Exception ex) {
-                        logger.warn("Failed to clear cart for customer {}", order.customerId(), ex);
-                    }
-                }
 
                 response.sendRedirect(buildSuccessUrl(orderId));
             } catch (Exception ex) {
